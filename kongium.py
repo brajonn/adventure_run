@@ -6,6 +6,12 @@ def printNow():
 	t = time.localtime()
 	current_time = time.strftime("%D %H:%M:%S", t)
 	print(current_time)
+
+def getGas():
+    res = requests.get("https://gasstation-mainnet.matic.network/v2")
+    data = res.json()
+    gas = data['fast']
+    return(gas)
     
 def kong():
     printNow()
@@ -22,15 +28,16 @@ def kong():
     kong_address = web3.toChecksumAddress('0x70C575588B98C1F46B1382c706AdAf398A874e3E')
     contract = web3.eth.contract(address=kong_address, abi=kong_abi)
     nonce = web3.eth.getTransactionCount(str(ADDRESS))
-    i = 0
+    gas = getGas()
     # runAdventureVRF(teamID, gameItem) - false(banana) / true(kongium)
     # while i < 5:
-    add_txn = contract.functions.runAdventureVRF(1, false).buildTransaction({
+    print(gas['maxFee'])
+    add_txn = contract.functions.runAdventureVRF(0, true).buildTransaction({
         'nonce': nonce,
         'chainId': 137,
         'gas': 250000,
-        'maxFeePerGas': web3.toWei('45', 'gwei'),
-        'maxPriorityFeePerGas': web3.toWei('45', 'gwei'),
+        'maxFeePerGas': web3.toWei(gas['maxFee'], 'gwei'),
+        'maxPriorityFeePerGas': web3.toWei(gas['maxPriorityFee'], 'gwei'),
     })
     signed_txn = web3.eth.account.signTransaction(add_txn, private_key=PRIVATE_KEY)
     txn_receipt = web3.eth.sendRawTransaction(signed_txn.rawTransaction)
